@@ -2,10 +2,11 @@
 
 enum PooyoColor
 {
-	Red,
-	Green,
-	Blue,
-	Yellow
+	POOYO_COLOR_RED,
+	POOYO_COLOR_GREEN,
+	POOYO_COLOR_BLUE,
+	POOYO_COLOR_YELLOW,
+	POOYO_COLOR_COUNT
 };
 
 
@@ -18,7 +19,7 @@ private:
 	char isConnected; // bitString. in order of 0000urdl
 
 public:
-	Pooyo(int _x, int _y, int _color)
+	Pooyo(float _x, float _y, int _color)
 		: x_actual(_x), y_actual(_y),
 		x_toBe(_x), y_toBe(_y),
 		color(_color), isConnected(0)
@@ -31,6 +32,7 @@ public:
 	//void setX_toBe(float x);
 	//void setY_toBe(float y);
 	int getColor();
+	int getColor() const;
 
 	int getGridX();
 	int getGridY();
@@ -40,5 +42,5 @@ public:
 	void moveUp();
 	void moveDown(float dist = 0.5f);
 
-	void updateMoving(int deltaTIme);
+	void updateMoving(float deltaTIme);
 };

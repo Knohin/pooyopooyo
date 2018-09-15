@@ -1,191 +1,128 @@
 #include "GameManager.h"
 
-#include <cstdlib>
 #include <SDL.h>
 #include "sdl_renderer.h"
+#include "SDL_image.h"
 
+const int SCREEN_WIDTH = 600;
+const int SCREEN_HEIGHT = 800;
+//const int HEIGHT = 12;
+//const int WIDTH = 6;
 
-const int GameManager::shape[4][2][2] = {
-	{ { 1,2 },{ 0,0 } },
-{ { 1,0 },{ 2,0 } },
-{ { 2,1 },{ 0,0 } },
-{ { 2,0 },{ 1,0 } },
-}; // 4가지 방향, 2x2 모양
+GameManager* GameManager::mInstance = nullptr;
 
-GameManager::GameManager(int width, int height)
+GameManager::GameManager()
 {
-	isRunning = true;
-	isBlockHit = false;
-
-	level = 0;
-	moveDownInterval = 1000;
-	elapsedTime = 0;
-
-	totalErasedBlockCount = 0;
-	comboCount = 1;
-	score = 0;
-
-	state = Moving;
-
-	board = Board(width, height);
-
-	curPooyo[0] = new Pooyo(2, 0, rand() % 4);
-	curPooyo[1] = new Pooyo(3, 0, rand() % 4);
-	direction = 1;
 }
 
 GameManager::~GameManager()
 {
-	if (curPooyo[0])
-	{
-		delete curPooyo[0];
-		delete curPooyo[1];
-	}
+	delete curScene;
+
+	cleanup(window, renderer);
+	window = nullptr;
+	renderer = nullptr;
+
+	IMG_Quit();
+	SDL_Quit();
 }
 
-
-void GameManager::update(int deltaTime)
+void GameManager::Initialize(char* windowTitle)
 {
-	elapsedTime += deltaTime;
+	isRunning = true;
+	isSceneChanging = false;
+	nextSceneIndex = 0;
+	alpha = 0;
+	deltaAlpha = 0;
 
-	if (state == Moving)
+	// Renderer Setting
+	if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
 	{
-		curPooyo[0]->updateMoving(deltaTime);
-		curPooyo[1]->updateMoving(deltaTime);
-
-		// clock tick
-		if (moveDownInterval < elapsedTime)
-		{
-			elapsedTime -= moveDownInterval;
-
-			if (board.IsCollideAt(curPooyo[0]->getX(), curPooyo[0]->getY() + 1.1f) ||
-				board.IsCollideAt(curPooyo[1]->getX(), curPooyo[1]->getY() + 1.1f))
-			{
-				setCurPooyoOntoBoard();
-				state = Stacking;
-			}
-			else
-			{
-				curPooyo[0]->moveDown();
-				curPooyo[1]->moveDown();
-			}
-		}
+		logSDLError(std::cerr, "SDL_Init");
+		exit(1);
 	}
-	else if (state == Stacking)
+	window = SDL_CreateWindow(windowTitle, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+	if (window == nullptr)
 	{
-		static const float gravity = 20.0f;
-		static float vel = 0.7f;
-		static float distance = 0.0f;
-
-		vel += gravity * deltaTime / 1000.0f;
-		distance += vel * deltaTime / 1000.0f;
-
-		// Draging
-		if (1.0f <= distance)
-		{
-			int dist_i = (int)distance;
-
-			// Move Down by dist_i
-			if (stackDownBlocksOnBoard(dist_i))
-				distance -= dist_i;
-			else
-			{
-				if (!board.EraseLinkedBlocks())
-				{
-					state = Moving;
-					curPooyo[0] = new Pooyo(2, 0, rand() % 4);
-					curPooyo[1] = new Pooyo(3, 0, rand() % 4);
-					direction = 1;
-					vel = 0.0f;
-					distance = 0.0f;
-				}
-			}
-		}
-
-		/// Check linking
+		logSDLError(std::cerr, "SDL_CreateWindow");
+		SDL_Quit();
+		exit(1);
 	}
 
-	// Level
-	if (level != score / 10000)
+	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+	if (renderer == nullptr)
 	{
-		level = score / 10000;
-		moveDownInterval = 1000 - 70 * level;
+		logSDLError(std::cerr, "SDL_CreateRenderer");
+		cleanup(window);
+		SDL_Quit();
+		exit(1);
 	}
 
-	// Game Over
-	if (board.GetGrid()[0][(board.GetWidth() - 1) / 2] || level > 9)
-	{
-		isRunning = false;
-	}
+	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 
-	return;
+	SceneManager::GetInstance();
 }
 
-void GameManager::rotateCurPooyo()
+GameManager& GameManager::GetInstance()
 {
-	if (direction == 0) // 세로
-	{
-		if (!board.IsCollideAt(curPooyo[0]->getX() + 1, curPooyo[0]->getY()))
-		{
-			curPooyo[0]->moveRight();
-			curPooyo[1]->moveUp();
-
-			Pooyo* temp = curPooyo[0];
-			curPooyo[0] = curPooyo[1];
-			curPooyo[1] = temp;
-
-			direction = 1;
-		}
-	}
-	else // dirention == 1 // 가로
-	{
-		if (!board.IsCollideAt(curPooyo[0]->getX(), curPooyo[0]->getY()+1))
-		{
-			curPooyo[1]->moveDown(1.0f);
-			curPooyo[1]->moveLeft();
-
-			direction = 0;
-		}
-	}
+	if (mInstance == nullptr)
+		mInstance = new GameManager();
+	return *mInstance;
 }
 
-void GameManager::setCurPooyoOntoBoard()
+bool GameManager::IsRunning() { return isRunning; }
+void GameManager::StopRunning() { isRunning = false; }
+
+void GameManager::Update(float deltaTime)
 {
-	board.AddPooyo(curPooyo[0]);
-	board.AddPooyo(curPooyo[1]);
-	delete curPooyo[0];
-	delete curPooyo[1];
-	curPooyo[0] = nullptr;
-	curPooyo[1] = nullptr;
-}
-
-bool GameManager::stackDownBlocksOnBoard(int distanceToMove)
-{
-	bool stacked = false;
-
-
-	for (int x = 0; x < board.GetWidth(); x++)
+	if (isSceneChanging)
 	{
-		int bottom = -1;
-
-		for (int y = board.GetHeight() - 1; 0 < y; y--)
+		alpha += deltaAlpha * deltaTime;
+		if (1 < alpha)
 		{
-			if (bottom == -1)
-			{
-				if (board[y][x] == 0)
-					bottom = y;
-			}
-			else
-			{
-				if (board[y][x] != 0)
-				{
-					board[bottom--][x] = board[y][x];
-					board[y][x] = 0;
-					stacked = true;
-				}
-			}
+			alpha = 1;
+			deltaAlpha *= -1;
+			SceneManager::GetInstance().ChangeScene(nextSceneIndex);
+		}
+		if (alpha < 0)
+		{
+			alpha = 0;
+			nextSceneIndex = -1;
+			isSceneChanging = false;
 		}
 	}
+	else
+	{
+		curScene->HandleInput();
+	}
 
-	return stacked;
+	curScene->Update(deltaTime);
+}
+
+void GameManager::Render()
+{
+	SDL_RenderClear(renderer);
+
+	curScene->Render();
+
+
+	if (isSceneChanging)
+	{
+		std::cout << "Alpha : " << alpha << std::endl;
+		// Draw Rectangle
+		SDL_Rect rect;
+		rect.x = 0; rect.y = 0; rect.w = SCREEN_WIDTH; rect.h = SCREEN_HEIGHT;
+
+		SDL_SetRenderDrawColor(renderer, 0, 0, 0, (Uint8)(255*alpha));
+		SDL_RenderFillRect(renderer, &rect);
+	}
+
+	SDL_RenderPresent(renderer);
+}
+
+void GameManager::ChangeScene(int sceneIndex)
+{
+	isSceneChanging = true;
+	nextSceneIndex = sceneIndex;
+	deltaAlpha = 1.0f;
 }

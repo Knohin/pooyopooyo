@@ -10,6 +10,7 @@ void Pooyo::setY(float y) { y_actual = y; }
 //void Pooyo::setX_toBe(float x) { x_toBe = x; }
 //void Pooyo::setY_toBe(float y) { y_toBe = y; }
 int Pooyo::getColor() { return color; }
+int Pooyo::getColor() const { return color; }
 
 void Pooyo::moveLeft() { x_toBe--; }
 void Pooyo::moveRight() { x_toBe++; }
@@ -20,9 +21,9 @@ int Pooyo::getGridX() { return (int)floorf(x_actual + 0.6f); }
 int Pooyo::getGridY() { return (int)floorf(y_actual + 0.6f); }
 
 
-void Pooyo::updateMoving(int deltaTime)
+void Pooyo::updateMoving(float deltaTime)
 {
-	float maxDistance =  deltaTime / 50.0f;
+	float maxDistance =  deltaTime * 20.0f;
 
 	float x_Diff = x_toBe - x_actual;
 	if (x_Diff < -maxDistance)

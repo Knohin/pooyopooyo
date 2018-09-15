@@ -1,55 +1,95 @@
 #pragma once
 #include "Pooyo.h"
+#include <vector>
+
+enum eBoardState
+{
+	Moving,
+	//PrepareStacking,
+	Stacking,
+	Popping
+};
 
 class Board
 {
 private:
 	int width, height;
+	eBoardState state;
+	bool isFinished;
+
 	/*************************************
 	* board[y][x]
 	* 0   : Blank Space
 	* 1~4 : Four Different Color Block
 	*************************************/
-	int** grid;
+	Pooyo*** grid;
 	bool** linkedBlock;
 	bool** isChecked;
-	int linkedBlockCount = 0;
+	int linkedBlockCount;
+
+	int direction;
+	static const int shape[4][2][2];
+
+	float moveDownInterval;
+	float elapsedTime;
+
+	int totalErasedBlockCount;
+	int comboCount;
+
+
+public:
+	Pooyo * curPooyo[2];
+	std::vector<Pooyo*> pooyoToStack;
 
 public:
 	Board() {}
 	Board(int _width, int _height);
-	void init();
+	void Init();
 	~Board();
-	void destroy();
+	void Release();
 
-	int** GetGrid();
-	int GetHeight();;
+	void Update(float deltaTime);
+
+	Pooyo*** GetGrid();
+	int GetHeight();
 	int GetWidth();
+	int GetDirection();
+	bool IsFinished();
+	void SetElapsedTime(float t);
+	void SetIsFinished(bool);
 
-	bool IsCollideAt(int x, int y);
+	bool IsCollideAt(float x, float y);
+	bool IsCollide(Pooyo* pooyo);
+	bool IsCollide(Pooyo* pooyo, float x, float y);
+
 	void AddPooyo(Pooyo* newPooyo);
-
-	bool EraseLinkedBlocks();
+	void RotateCurPooyo();
+	void ChangeState(eBoardState newState);
 
 private:
+	void CheckPooyoToStack();
+	bool StackDownBlocks(float distanceToMove);
+	bool EraseLinkedBlocks();
+
 	bool checkLinked(int x, int y, int color);
+
 
 public:
 	class Proxy {
 	private:
-		int* row;
+		Pooyo** row;
 	public:
-		Proxy(int* _row) : row(_row) {}
-		int& operator[](int x) { return row[x]; }
+		Proxy(Pooyo** _row) : row(_row) {}
+		Pooyo*& operator[](int x) { return row[x]; }
 	};
 	Proxy operator[](int y) { return Proxy(grid[y]); }
 
 	Board& operator=(const Board& rVal)
 	{
-		destroy();
+		Release();
 		width = rVal.width;
 		height = rVal.height;
-		init();
+		Init();
 		linkedBlockCount = rVal.linkedBlockCount;
 
 		return *this;

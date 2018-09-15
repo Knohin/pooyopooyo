@@ -39,20 +39,29 @@ SDL_Texture* loadTexture(const std::string &file, SDL_Renderer *ren)
 
 void renderTexture(SDL_Texture *tex, SDL_Renderer *ren, int x, int y, SDL_Rect *clip)
 {
+	renderTexture(tex, ren, x, y, 0.0f, clip);
+}
+void renderTexture(SDL_Texture *tex, SDL_Renderer *ren, int x, int y, float angle, SDL_Rect *clip)
+{
 	SDL_Rect dst;
 	dst.x = x;
 	dst.y = y;
 	if (clip != nullptr)
 	{
+		if (clip->w == 0 && clip->h == 0)
+			SDL_QueryTexture(tex, NULL, NULL, &clip->w, &clip->h);
 		dst.w = clip->w;
 		dst.h = clip->h;
 	}
 	else
 		SDL_QueryTexture(tex, NULL, NULL, &dst.w, &dst.h);
 
-	SDL_RenderCopy(ren, tex, clip, &dst);
+	SDL_Point center;
+	center.x = dst.w / 2;
+	center.y = dst.h / 2;
+	renderTexture(tex, ren, dst, clip, angle, &center);
 }
-void renderTexture(SDL_Texture *tex, SDL_Renderer *ren, int x, int y, int w, int h) {
+void renderTexture(SDL_Texture *tex, SDL_Renderer *ren, int x, int y, int w, int h, SDL_Rect *clip) {
 	//Setup the destination rectangle to be at the position we want
 	SDL_Rect dst;
 	dst.x = x;
@@ -60,9 +69,13 @@ void renderTexture(SDL_Texture *tex, SDL_Renderer *ren, int x, int y, int w, int
 	dst.w = w;
 	dst.h = h;
 	//Query the texture to get its width and height to use
-	SDL_RenderCopy(ren, tex, NULL, &dst);
+	renderTexture(tex, ren, dst, clip);
 }
 void renderTexture(SDL_Texture *tex, SDL_Renderer *ren, SDL_Rect& dst, SDL_Rect *clip)
 {
 	SDL_RenderCopy(ren, tex, clip, &dst);
+}
+void renderTexture(SDL_Texture *tex, SDL_Renderer *ren, SDL_Rect& dst, SDL_Rect *clip, float angle, SDL_Point* center)
+{
+	SDL_RenderCopyEx(ren, tex, clip, &dst, angle, center, SDL_FLIP_NONE);
 }

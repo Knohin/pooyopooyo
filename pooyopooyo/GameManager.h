@@ -1,46 +1,39 @@
 #pragma once
 #include "Pooyo.h"
 #include "Board.h"
+#include "Input.h"
+#include "Scene.h"
 #include <SDL_render.h>
-
-enum eGameState
-{
-	Moving,
-	Stacking,
-	Poping
-};
+#include <vector>
 
 class GameManager
 {
-public:
+private:
+	static GameManager* mInstance;
 	bool isRunning;
-	bool isBlockHit;
+	bool isSceneChanging;
+	int nextSceneIndex;
+	float alpha;
+	float deltaAlpha;
 
-	int level;
-	int moveDownInterval;
-
-	int totalErasedBlockCount;
-	int comboCount;
-	int score;
-
-	eGameState state;
-
-	int direction;
-	static const int shape[4][2][2];
-	
 public:
-	Pooyo * curPooyo[2];
+	Scene* curScene;
 
-	//Block * curBlock;
-	Board board;
-	int elapsedTime;
+	SDL_Window * window;
+	SDL_Renderer* renderer;
 
-	GameManager(int width, int height);
+private:
+	GameManager();
 	~GameManager();
+public:
+	void Initialize(char* windowTitle);
+	static GameManager& GetInstance();
 
-	void update(int deltaTime);
+	bool IsRunning();
+	void StopRunning();
 
-	void rotateCurPooyo();
-	void setCurPooyoOntoBoard();
-	bool stackDownBlocksOnBoard(int distanceToMove);
+	void Update(float deltaTime);
+	void Render();
+
+	void ChangeScene(int sceneIndex);
 };

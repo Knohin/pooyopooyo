@@ -1,45 +1,20 @@
 #pragma once
-#include <conio.h>
-#include "GameManager.h"
-//#include "Block.h"
 
-#define UP (72)
-#define LEFT (75)
-#define DOWN (80)
-#define RIGHT (77)
-#define SPACE (32)
-
+class Scene;
 class Command
 {
 public:
 	virtual ~Command() {}
-	virtual void execute(GameManager& gameManager) = 0;
+	virtual void execute(Scene* scene) = 0;
 };
 
-class MoveLeftCommand : Command
-{
-	virtual void execute(GameManager& gameManager);
-};
-class MoveRightCommand : Command
-{
-	virtual void execute(GameManager& gameManager);
-};
-class MoveDownCommand : Command
-{
-	virtual void execute(GameManager& gameManager);
-};
-class DropDownCommand : Command
-{
-	virtual void execute(GameManager& gameManager);
-};
-class RotateCommand : Command
-{
-	virtual void execute(GameManager& gameManager);
-};
-class QuitCommand : Command
-{
-	virtual void execute(GameManager& gameManager);
-};
+class MoveLeftCommand : Command		{ virtual void execute(Scene* scene);};
+class MoveRightCommand : Command	{ virtual void execute(Scene* scene);};
+class MoveDownCommand : Command		{ virtual void execute(Scene* scene);};
+class DropDownCommand : Command		{ virtual void execute(Scene* scene);};
+class RotateCommand : Command		{ virtual void execute(Scene* scene);};
+class QuitCommand : Command			{ virtual void execute(Scene* scene);};
+//class GameStartCommand : Command { virtual void execute(Scene* scene); };
 
 
 class InputHandler
@@ -51,14 +26,18 @@ private:
 	Command * buttonD;
 	Command * buttonQ;
 	Command * buttonSpace;
+	Command * buttonEnter;
 
 public:
-	void SetButtonW(Command* command) { buttonW = command; }
-	void SetButtonA(Command* command) { buttonA = command; }
-	void SetButtonS(Command* command) { buttonS = command; }
-	void SetButtonD(Command* command) { buttonD = command; }
-	void SetButtonQ(Command* command) { buttonQ = command; }
-	void SetButtonSpace(Command* command) { buttonSpace = command; }
+	~InputHandler();
+
+	void SetButtonW(Command* command);
+	void SetButtonA(Command* command);
+	void SetButtonS(Command* command);
+	void SetButtonD(Command* command);
+	void SetButtonQ(Command* command);
+	void SetButtonSpace(Command* command);
+	void SetButtonEnter(Command* command);
 
 	Command* handleInput();
 };

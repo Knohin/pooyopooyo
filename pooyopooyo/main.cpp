@@ -3,8 +3,7 @@
 #include <conio.h>//kbhit, getch
 #include <Windows.h>//gotoxy, Sleep, 콘솔 창크기 조절
 #include <ctime>//clock
-
-#include "render.h"
+#include <chrono>
 
 #include "GameManager.h"
 #include "Pooyo.h"
@@ -14,68 +13,38 @@
 using namespace std;
 
 
-/////  CONST VARIABLES
-const int HEIGHT = 12;
-const int WIDTH = 6;
 const int FPS = 60; //(ms)
-const int FRAME_RATE = 1000 / FPS;
+const float FRAME_RATE = 1.0f / FPS;
 
 /////  VARIABLE DECLARATIONS
-GameManager gameManager(WIDTH, HEIGHT);
-InputHandler inputHandler;
-Renderer renderer("PooyoPooyo!");
+GameManager& gameManager = GameManager::GetInstance();
 
-///// FUNCTION DECLARATIONS
-void initialize();
 
 
 int main(int argc, char** argv)
 {
-	
-	initialize();
+	srand((unsigned int)time(NULL));
+	gameManager.Initialize("PooyoPooyo!");
 
-	clock_t lastTime = clock();
-	clock_t elapsedTime = 0;
-
+	std::chrono::time_point<std::chrono::system_clock> lastTime = std::chrono::system_clock::now();
+	float elapsedTime = 0.0;
 
 	// Main Loop
-	while (gameManager.isRunning)
+	while (gameManager.IsRunning())
 	{
-		clock_t currentTime = clock();
-		clock_t deltaTime = currentTime - lastTime;
+		std::chrono::time_point<std::chrono::system_clock> currentTime = std::chrono::system_clock::now();
+		std::chrono::duration<float> deltaTime = currentTime - lastTime;
+
 		lastTime = currentTime;
+		gameManager.Update(deltaTime.count());
 
-		if (gameManager.state == Moving)
-		{
-			Command* command = inputHandler.handleInput();
-			if (command)
-				command->execute(gameManager);
-		}
-
-		gameManager.update(deltaTime);
-
-		elapsedTime += deltaTime;
+		elapsedTime += deltaTime.count();
 		if (FRAME_RATE < elapsedTime)
 		{
-			renderer.render(gameManager);
+			gameManager.Render();
 			elapsedTime = 0;
 		}
 	}
 
 	return 0;
-}
-
-void initialize()
-{
-	srand((unsigned int)time(NULL));
-	
-	// Controller Setting
-	inputHandler.SetButtonW((Command*)new RotateCommand());
-	inputHandler.SetButtonA((Command*)new MoveLeftCommand());
-	inputHandler.SetButtonS((Command*)new MoveDownCommand());
-	inputHandler.SetButtonD((Command*)new MoveRightCommand());
-	inputHandler.SetButtonQ((Command*)new QuitCommand());
-	inputHandler.SetButtonSpace((Command*)new DropDownCommand());
-
-	return;
 }
