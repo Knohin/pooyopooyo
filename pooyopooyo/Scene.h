@@ -45,7 +45,7 @@ class PooyoParticle;
 class StartMenuScene : public Scene
 {
 private:
-	int BG_OffsetX, BG_OffsetY;
+	float BG_OffsetX, BG_OffsetY;
 	std::vector<PooyoParticle*> particles;
 
 	SDL_Texture * background, *title, *bottomText;

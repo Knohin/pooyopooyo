@@ -108,7 +108,6 @@ void GameManager::Render()
 
 	if (isSceneChanging)
 	{
-		std::cout << "Alpha : " << alpha << std::endl;
 		// Draw Rectangle
 		SDL_Rect rect;
 		rect.x = 0; rect.y = 0; rect.w = SCREEN_WIDTH; rect.h = SCREEN_HEIGHT;

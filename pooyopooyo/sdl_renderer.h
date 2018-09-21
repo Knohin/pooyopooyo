@@ -33,3 +33,6 @@ void renderTexture(SDL_Texture *tex, SDL_Renderer *ren, int x, int y, float angl
 void renderTexture(SDL_Texture *tex, SDL_Renderer *ren, int x, int y, int w, int h, SDL_Rect *clip = NULL);
 void renderTexture(SDL_Texture *tex, SDL_Renderer *ren, SDL_Rect& dst, SDL_Rect *clip = NULL);
 void renderTexture(SDL_Texture *tex, SDL_Renderer *ren, SDL_Rect& dst, SDL_Rect *clip, float angle, SDL_Point* center);
+
+void renderTexture(SDL_Texture *tex, SDL_Renderer *ren, int x, int y, int w, int h, float offsetX, float offsetY);
+void renderTexture(SDL_Texture *tex, SDL_Renderer *ren, SDL_Rect& dst, float offsetX, float offsetY);

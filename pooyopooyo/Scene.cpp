@@ -89,8 +89,8 @@ public:
 
 void StartMenuScene::Initialize()
 {
-	BG_OffsetX = 0;
-	BG_OffsetY = 0;
+	BG_OffsetX = 0.0f;
+	BG_OffsetY = 0.0f;
 
 	// Load Texture
 	renderer = GameManager::GetInstance().renderer;
@@ -167,8 +167,8 @@ void StartMenuScene::Update(float deltaTime)
 	
 	elapsedTime += deltaTime;
 	// TODO: Background offset
-	BG_OffsetX = 100 *elapsedTime;
-	BG_OffsetY = 200 *elapsedTime;
+	BG_OffsetX = 0.2f *elapsedTime;
+	BG_OffsetY = 0.2f *elapsedTime;
 	// TODO: spurt
 	for (int i = particles.size() - 1; 0 <= i; --i)
 	{
@@ -200,12 +200,7 @@ void StartMenuScene::Render()
 	}
 
 
-	SDL_Rect clip;
-	clip.x = BG_OffsetX;
-	clip.y = BG_OffsetY;
-	clip.w = 1700;
-	clip.h = 800;
-	renderTexture(background, renderer, 0, 0 , &clip);
+	renderTexture(background, renderer, 0, 0, w , h, BG_OffsetX, BG_OffsetY);
 	renderTexture(title, renderer, 0, 0);
 	renderTexture(bottomText, renderer, 0, 0);
 
