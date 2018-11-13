@@ -1,13 +1,15 @@
 #include "Board.h"
 #include <cmath>
+#include <queue>
 
-
+/* TODELETE
 const int Board::shape[4][2][2] = {
 	{ { 1,2 },{ 0,0 } },
 { { 1,0 },{ 2,0 } },
 { { 2,1 },{ 0,0 } },
 { { 2,0 },{ 1,0 } },
 }; // 4가지 방향, 2x2 모양
+*/
 
 Board::Board(int _width=0, int _height=0)
 	:width(_width), height(_height)
@@ -22,13 +24,16 @@ void Board::Init()
 	grid = new Pooyo**[height];
 	for (int i = 0; i<height; ++i)
 		grid[i] = new Pooyo*[width]();
+	for (int y = 0; y < height; ++y)
+		for (int x = 0; x < width; ++x)
+			grid[y][x] = nullptr;
 	linkedBlock = new bool*[height];
 	for (int i = 0; i<height; ++i)
 		linkedBlock[i] = new bool[width]();
 
-	isChecked = new bool*[height];
-	for (int i = 0; i<height; ++i)
-		isChecked[i] = new bool[width]();
+	//isChecked = new bool*[height];
+	//for (int i = 0; i<height; ++i)
+	//	isChecked[i] = new bool[width]();
 
 	linkedBlockCount = 0;
 
@@ -64,12 +69,12 @@ void Board::Release()
 			delete[] linkedBlock[i];
 		delete[] linkedBlock;
 	}
-	if (isChecked)
-	{
-		for (int i = 0; i < height; i++)
-			delete[] isChecked[i];
-		delete[] isChecked;
-	}
+	//if (isChecked)
+	//{
+	//	for (int i = 0; i < height; i++)
+	//		delete[] isChecked[i];
+	//	delete[] isChecked;
+	//}
 
 	delete curPooyo[0];
 	delete curPooyo[1];
@@ -81,8 +86,8 @@ void Board::Update(float deltaTime)
 
 	if (state == Moving)
 	{
-		curPooyo[0]->updateMoving(deltaTime);
-		curPooyo[1]->updateMoving(deltaTime);
+		//curPooyo[0]->updateMoving(deltaTime);
+		//curPooyo[1]->updateMoving(deltaTime);
 
 		// clock tick
 		if (moveDownInterval < elapsedTime)
@@ -152,15 +157,27 @@ void Board::Update(float deltaTime)
 	else if (state == Popping)
 	{
 		/// Check linking and change sprite
+		CheckConnection();
+
+		//// Pop 4 or above
+		//if (EraseLinkedBlocks())
+		//{
+		//	ChangeState(Stacking);
+		//}
+		//else
+		//{
+		//	ChangeState(Moving);
+		//}
 
 		// Pop 4 or above
-		if (EraseLinkedBlocks())
+		if (pooyoToDelete.empty())
 		{
-			ChangeState(Stacking);
+			ChangeState(Moving);
 		}
 		else
 		{
-			ChangeState(Moving);
+			EraseOver4();
+			ChangeState(Stacking);
 		}
 	}
 
@@ -202,7 +219,7 @@ bool Board::IsCollide(Pooyo* pooyo, float x, float y)
 
 void Board::AddPooyo(Pooyo* newPooyo)
 {
-	grid[newPooyo->getGridY()][newPooyo->getGridX()] = newPooyo;
+	grid[newPooyo->getY()][newPooyo->getX()] = newPooyo;
 }
 
 void Board::RotateCurPooyo()
@@ -225,7 +242,8 @@ void Board::RotateCurPooyo()
 	{
 		if (!IsCollideAt(curPooyo[0]->getX(), curPooyo[0]->getY() + 1))
 		{
-			curPooyo[1]->moveDown(1.0f);
+			curPooyo[1]->moveDown();
+			curPooyo[1]->moveDown();
 			curPooyo[1]->moveLeft();
 
 			direction = 0;
@@ -258,6 +276,7 @@ void Board::ChangeState(eBoardState toState)
 
 void Board::CheckPooyoToStack()
 {
+	pooyoToStack.clear();
 	for (int x = 0; x < width; x++)
 	{
 		bool isBlank = false;
@@ -281,8 +300,35 @@ void Board::CheckPooyoToStack()
 			}
 		}
 	}
+
+	// Set Pooyo connection
+	for (auto pooyo : pooyoToStack)
+	{
+		int x = pooyo->getX();
+		int y = pooyo->getY();
+
+		if (y > 0 && grid[y - 1][x] != nullptr)
+		{
+			grid[y - 1][x]->connection &= ~POOYO_CONN_UP;
+		}
+		if (y + 1 < height && grid[y + 1][x] != nullptr)
+		{
+			grid[y + 1][x]->connection &= ~POOYO_CONN_DN;
+		}
+		if (x > 0 && grid[y][x - 1] != nullptr)
+		{
+			grid[y][x - 1]->connection &= ~POOYO_CONN_LT;
+		}
+		if (x + 1 < width && grid[y][x + 1] != nullptr)
+		{
+			grid[y][x + 1]->connection &= ~ POOYO_CONN_RT;
+		}
+
+		pooyo->connection = POOYO_CONN_NO;
+	}
 }
 
+/*
 bool Board::StackDownBlocks(float distanceToMove)
 {
 	bool moved = false;
@@ -322,14 +368,16 @@ bool Board::StackDownBlocks(float distanceToMove)
 
 	return moved;
 }
+*/
+
 
 bool Board::EraseLinkedBlocks()
 {
 	bool isErased = false;
 
-	for (int y = 0; y < height; ++y)
-		for (int x = 0; x < width; ++x)
-			isChecked[y][x] = false;
+	//for (int y = 0; y < height; ++y)
+	//	for (int x = 0; x < width; ++x)
+	//		isChecked[y][x] = false;
 
 	for (int y = 0; y < height; ++y)
 		for (int x = 0; x < width; ++x)
@@ -362,17 +410,99 @@ bool Board::EraseLinkedBlocks()
 bool Board::checkLinked(int x, int y, int color)
 {
 	if (x < 0 || width <= x || y < 0 || height <= y
-		|| isChecked[y][x] == true
+		//|| isChecked[y][x] == true
 		|| grid[y][x] == nullptr
 		|| grid[y][x]->getColor() != color)
 		return false;
 
 	linkedBlockCount++;
 	linkedBlock[y][x] = true;
-	isChecked[y][x] = true;
+	//isChecked[y][x] = true;
 
 	checkLinked(x + 1, y, color);
 	checkLinked(x - 1, y, color);
 	checkLinked(x, y + 1, color);
 	checkLinked(x, y - 1, color);
+}
+
+void Board::CheckConnection()
+{
+	std::queue<Pooyo*> q;
+	bool** isChecked = new bool*[height];
+	for (int i = 0; i < height; ++i)
+		isChecked[i] = new bool[width]();
+
+	for (int y = 0; y < height; ++y)
+	{
+		for (int x = 0; x < width; ++x)
+		{
+			if (grid[y][x] == nullptr)
+				continue;
+
+			q.push(grid[y][x]);
+			int color = grid[y][x]->getColor();
+
+			isChecked[y][x] = true;
+			int count = 1;
+			std::vector<Pooyo*> connected;
+
+			while (!q.empty())
+			{
+				Pooyo* py = q.front();
+				q.pop();
+				connected.push_back(py);
+
+				int x = py->getX();
+				int y = py->getY();
+
+				if (y > 0 && !isChecked[y-1][x] && grid[y - 1][x] != nullptr && grid[y - 1][x]->getColor() == color)
+				{
+					isChecked[y-1][x] = true;
+					count++;
+					py->connection |= POOYO_CONN_UP;
+					q.push(grid[y - 1][x]);
+				}
+				if (y + 1 < height && !isChecked[y + 1][x] && grid[y + 1][x] != nullptr && grid[y + 1][x]->getColor() == color)
+				{
+					isChecked[y+1][x] = true;
+					count++;
+					py->connection |= POOYO_CONN_DN;
+					q.push(grid[y + 1][x]);
+				}
+				if (x > 0 && !isChecked[y][x-1] && grid[y][x - 1] != nullptr && grid[y][x - 1]->getColor() == color)
+				{
+					isChecked[y][x-1] = true;
+					count++;
+					py->connection |= POOYO_CONN_LT;
+					q.push(grid[y][x - 1]);
+				}
+				if (x + 1 < width && !isChecked[y][x + 1] && grid[y][x + 1] != nullptr && grid[y][x + 1]->getColor() == color)
+				{
+					isChecked[y][x+1] = true;
+					count++;
+					py->connection |= POOYO_CONN_RT;
+					q.push(grid[y][x+1]);
+				}
+			}
+
+			if (count > 3)
+			{
+				pooyoToDelete.insert(pooyoToDelete.end(), connected.begin(), connected.end());
+			}
+		}
+	}
+
+	for (int i = 0; i < height; i++)
+		delete[] isChecked[i];
+	delete[] isChecked;
+}
+
+void Board::EraseOver4()
+{
+	for (auto pooyo : pooyoToDelete)
+	{
+		grid[pooyo->getY()][pooyo->getX()] = nullptr;
+		delete pooyo;
+	}
+	pooyoToDelete.clear();
 }

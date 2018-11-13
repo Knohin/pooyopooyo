@@ -72,6 +72,10 @@ private:
 	SDL_Texture * background;
 	SDL_Texture* pooyo[POOYO_COLOR_COUNT];
 
+	SDL_Texture* tile;
+	SDL_Texture* statusUIBackground;
+	SDL_Texture* pooyoSprite;
+
 public:
 	Board * board;
 

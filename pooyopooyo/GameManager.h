@@ -19,8 +19,6 @@ private:
 public:
 	Scene* curScene;
 
-	SDL_Window * window;
-	SDL_Renderer* renderer;
 
 private:
 	GameManager();

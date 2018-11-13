@@ -7,6 +7,8 @@ void logSDLError(std::ostream& os, const std::string& msg)
 }
 
 // Before sdl_image.h
+// This function only reads BMP format
+//
 //SDL_Texture* loadTexture(const std::string &file, SDL_Renderer *ren) {
 //	//Initialize to nullptr to avoid dangling pointer issues
 //	SDL_Texture *texture = nullptr;
@@ -141,3 +143,6 @@ void renderTexture(SDL_Texture *tex, SDL_Renderer *ren, SDL_Rect& dst, float off
 	}
 
 }
+
+
+//void renderSprite(SDL_Texture *sprite, SDL_Re)

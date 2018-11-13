@@ -58,8 +58,8 @@ Command* InputHandler::handleInput()
 void MoveLeftCommand::execute(Scene* scene)
 { 
 	Board* board = dynamic_cast<SoloGameScene*>(scene)->board;
-	if (!board->IsCollideAt(board->curPooyo[0]->getGridX() - 1, board->curPooyo[0]->getGridY()) &&
-		!board->IsCollideAt(board->curPooyo[1]->getGridX() - 1, board->curPooyo[1]->getGridY()))
+	if (!board->IsCollideAt(board->curPooyo[0]->getX() - 1, board->curPooyo[0]->getY()) &&
+		!board->IsCollideAt(board->curPooyo[1]->getX() - 1, board->curPooyo[1]->getY()))
 	{
 		board->curPooyo[0]->moveLeft();
 		board->curPooyo[1]->moveLeft();
@@ -68,8 +68,8 @@ void MoveLeftCommand::execute(Scene* scene)
 void MoveRightCommand::execute(Scene* scene)
 {
 	Board* board = dynamic_cast<SoloGameScene*>(scene)->board;
-	if (!board->IsCollideAt(board->curPooyo[0]->getGridX() + 1, board->curPooyo[0]->getGridY()) &&
-		!board->IsCollideAt(board->curPooyo[1]->getGridX() + 1, board->curPooyo[1]->getGridY()))
+	if (!board->IsCollideAt(board->curPooyo[0]->getX() + 1, board->curPooyo[0]->getY()) &&
+		!board->IsCollideAt(board->curPooyo[1]->getX() + 1, board->curPooyo[1]->getY()))
 	{
 		board->curPooyo[0]->moveRight();
 		board->curPooyo[1]->moveRight();
@@ -78,8 +78,8 @@ void MoveRightCommand::execute(Scene* scene)
 void MoveDownCommand::execute(Scene* scene)
 {
 	Board* board = dynamic_cast<SoloGameScene*>(scene)->board;
-	if (board->IsCollideAt(board->curPooyo[0]->getX(), board->curPooyo[0]->getY() + 0.5f) ||
-		board->IsCollideAt(board->curPooyo[1]->getX(), board->curPooyo[1]->getY() + 0.5f))
+	if (board->IsCollideAt(board->curPooyo[0]->getX(), board->curPooyo[0]->getY()+1) ||
+		board->IsCollideAt(board->curPooyo[1]->getX(), board->curPooyo[1]->getY()+1) )
 	{
 		// Set curPooyo on the board
 		board->AddPooyo(board->curPooyo[0]);
@@ -101,7 +101,7 @@ void DropDownCommand::execute(Scene* scene)
 	Board* board = dynamic_cast<SoloGameScene*>(scene)->board;
 	if (board->GetDirection() == 0) // vertical
 	{
-		int x = board->curPooyo[1]->getGridX();
+		int x = board->curPooyo[1]->getX();
 		int bottom = -1;
 		for (int y = board->GetHeight()-1; 0 < y; y--)
 		{
@@ -118,7 +118,7 @@ void DropDownCommand::execute(Scene* scene)
 	}
 	else // horizontal
 	{
-		int x0 = board->curPooyo[0]->getGridX();
+		int x0 = board->curPooyo[0]->getX();
 		int y0 = -1;
 		for (int y = board->GetHeight() - 1; 0 < y; y--)
 		{
@@ -128,7 +128,7 @@ void DropDownCommand::execute(Scene* scene)
 				break;
 			}
 		}
-		int x1 = board->curPooyo[1]->getGridX();
+		int x1 = board->curPooyo[1]->getX();
 		int y1 = -1;
 		for (int y = board->GetHeight() - 1; 0 < y; y--)
 		{

@@ -24,7 +24,7 @@ private:
 	*************************************/
 	Pooyo*** grid;
 	bool** linkedBlock;
-	bool** isChecked;
+	//bool** isChecked;
 	int linkedBlockCount;
 
 	int direction;
@@ -40,6 +40,7 @@ private:
 public:
 	Pooyo * curPooyo[2];
 	std::vector<Pooyo*> pooyoToStack;
+	std::vector<Pooyo*> pooyoToDelete;
 
 public:
 	Board() {}
@@ -68,11 +69,13 @@ public:
 
 private:
 	void CheckPooyoToStack();
-	bool StackDownBlocks(float distanceToMove);
-	bool EraseLinkedBlocks();
+	//bool StackDownBlocks(float distanceToMove);
 
+	bool EraseLinkedBlocks();
 	bool checkLinked(int x, int y, int color);
 
+	void CheckConnection();
+	void EraseOver4();
 
 public:
 	class Proxy {

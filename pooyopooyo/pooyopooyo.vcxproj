@@ -147,6 +147,7 @@
     <ClCompile Include="main.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="sdl_renderer.cpp" />
   </ItemGroup>
@@ -156,6 +157,7 @@
     <ClInclude Include="cleanup.h" />
     <ClInclude Include="GameManager.h" />
     <ClInclude Include="Input.h" />
+    <ClInclude Include="Renderer.h" />
     <ClInclude Include="res_path.h" />
     <ClInclude Include="sdl_renderer.h" />
     <ClInclude Include="Scene.h" />

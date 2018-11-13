@@ -1,13 +1,10 @@
 #include "GameManager.h"
 
 #include <SDL.h>
-#include "sdl_renderer.h"
-#include "SDL_image.h"
+//#include "sdl_renderer.h"
+//#include "SDL_image.h"
+#include "Renderer.h"
 
-const int SCREEN_WIDTH = 600;
-const int SCREEN_HEIGHT = 800;
-//const int HEIGHT = 12;
-//const int WIDTH = 6;
 
 GameManager* GameManager::mInstance = nullptr;
 
@@ -18,10 +15,6 @@ GameManager::GameManager()
 GameManager::~GameManager()
 {
 	delete curScene;
-
-	cleanup(window, renderer);
-	window = nullptr;
-	renderer = nullptr;
 
 	IMG_Quit();
 	SDL_Quit();
@@ -35,30 +28,7 @@ void GameManager::Initialize(char* windowTitle)
 	alpha = 0;
 	deltaAlpha = 0;
 
-	// Renderer Setting
-	if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
-	{
-		logSDLError(std::cerr, "SDL_Init");
-		exit(1);
-	}
-	window = SDL_CreateWindow(windowTitle, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
-	if (window == nullptr)
-	{
-		logSDLError(std::cerr, "SDL_CreateWindow");
-		SDL_Quit();
-		exit(1);
-	}
-
-	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-	if (renderer == nullptr)
-	{
-		logSDLError(std::cerr, "SDL_CreateRenderer");
-		cleanup(window);
-		SDL_Quit();
-		exit(1);
-	}
-
-	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+	Renderer::Initialize(windowTitle);
 
 	SceneManager::GetInstance();
 }
@@ -101,7 +71,8 @@ void GameManager::Update(float deltaTime)
 
 void GameManager::Render()
 {
-	SDL_RenderClear(renderer);
+	//SDL_RenderClear(Renderer::renderer);
+	Renderer::RenderClear();
 
 	curScene->Render();
 
@@ -111,12 +82,13 @@ void GameManager::Render()
 		// Draw Rectangle
 		SDL_Rect rect;
 		rect.x = 0; rect.y = 0; rect.w = SCREEN_WIDTH; rect.h = SCREEN_HEIGHT;
-
-		SDL_SetRenderDrawColor(renderer, 0, 0, 0, (Uint8)(255*alpha));
-		SDL_RenderFillRect(renderer, &rect);
+		
+		SDL_SetRenderDrawColor(Renderer::renderer, 0, 0, 0, (Uint8)(255*alpha));
+		SDL_RenderFillRect(Renderer::renderer, &rect);
 	}
 
-	SDL_RenderPresent(renderer);
+	//SDL_RenderPresent(renderer);
+	Renderer::RenderPresent();
 }
 
 void GameManager::ChangeScene(int sceneIndex)
