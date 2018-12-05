@@ -1,6 +1,8 @@
 #include "Input.h"
 #include <SDL_events.h> 
 #include "GameManager.h"
+#include "Board.h"
+#include "Scene.h"
 
 SDL_Event e;
 
@@ -78,23 +80,7 @@ void MoveRightCommand::execute(Scene* scene)
 void MoveDownCommand::execute(Scene* scene)
 {
 	Board* board = dynamic_cast<SoloGameScene*>(scene)->board;
-	if (board->IsCollideAt(board->curPooyo[0]->getX(), board->curPooyo[0]->getY()+1) ||
-		board->IsCollideAt(board->curPooyo[1]->getX(), board->curPooyo[1]->getY()+1) )
-	{
-		// Set curPooyo on the board
-		board->AddPooyo(board->curPooyo[0]);
-		board->AddPooyo(board->curPooyo[1]);
-		board->curPooyo[0] = nullptr;
-		board->curPooyo[1] = nullptr;
-
-		board->ChangeState(Stacking);
-	}
-	else
-	{
-		board->curPooyo[0]->moveDown();
-		board->curPooyo[1]->moveDown();
-	}
-	board->SetElapsedTime(0.0f);
+	board->MoveDownCurPooyo();
 }
 void DropDownCommand::execute(Scene* scene)
 {
@@ -154,6 +140,8 @@ void DropDownCommand::execute(Scene* scene)
 	// Set curPooyo on the board
 	board->AddPooyo(board->curPooyo[0]);
 	board->AddPooyo(board->curPooyo[1]);
+	board->curPooyo[0]->isHalfwayUp = false;
+	board->curPooyo[1]->isHalfwayUp = false;
 	board->curPooyo[0] = nullptr;
 	board->curPooyo[1] = nullptr;
 

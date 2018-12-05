@@ -5,6 +5,8 @@
 #include "Input.h"
 #include "Pooyo.h"
 #include "Board.h"
+#include "Renderer.h"
+
 class GameManager;
 class Scene;
 
@@ -30,7 +32,7 @@ class Scene
 {
 protected:
 	InputHandler * inputHandler;
-	SDL_Renderer * renderer;
+	//SDL_Renderer * renderer;
 
 public:
 	virtual void Initialize() = 0;
@@ -47,9 +49,9 @@ class StartMenuScene : public Scene
 private:
 	float BG_OffsetX, BG_OffsetY;
 	std::vector<PooyoParticle*> particles;
-
-	SDL_Texture * background, *title, *bottomText;
-	SDL_Texture * pooyo[POOYO_COLOR_COUNT];
+	
+	Texture background, title, bottomText;
+	//Texture pooyo[POOYO_COLOR_COUNT];
 
 public:
 	~StartMenuScene();
@@ -69,12 +71,8 @@ private:
 class SoloGameScene : public Scene
 {
 private:
-	SDL_Texture * background;
-	SDL_Texture* pooyo[POOYO_COLOR_COUNT];
-
-	SDL_Texture* tile;
-	SDL_Texture* statusUIBackground;
-	SDL_Texture* pooyoSprite;
+	Texture tile, statusUIBackground;
+	Texture pooyoSprite;
 
 public:
 	Board * board;

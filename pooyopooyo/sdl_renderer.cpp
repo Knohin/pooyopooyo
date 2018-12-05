@@ -145,4 +145,3 @@ void renderTexture(SDL_Texture *tex, SDL_Renderer *ren, SDL_Rect& dst, float off
 }
 
 
-//void renderSprite(SDL_Texture *sprite, SDL_Re)

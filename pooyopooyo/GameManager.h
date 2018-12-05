@@ -1,10 +1,11 @@
 #pragma once
-#include "Pooyo.h"
-#include "Board.h"
-#include "Input.h"
-#include "Scene.h"
-#include <SDL_render.h>
-#include <vector>
+//#include "Pooyo.h"
+//#include "Board.h"
+//#include "Input.h"
+//#include "Scene.h"
+//#include <SDL_render.h>
+//#include <vector>
+class Scene;
 
 class GameManager
 {

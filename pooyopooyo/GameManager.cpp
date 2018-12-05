@@ -3,6 +3,7 @@
 #include <SDL.h>
 //#include "sdl_renderer.h"
 //#include "SDL_image.h"
+#include "Scene.h"
 #include "Renderer.h"
 
 

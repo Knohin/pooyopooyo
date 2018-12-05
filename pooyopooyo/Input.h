@@ -14,7 +14,6 @@ class MoveDownCommand : Command		{ virtual void execute(Scene* scene);};
 class DropDownCommand : Command		{ virtual void execute(Scene* scene);};
 class RotateCommand : Command		{ virtual void execute(Scene* scene);};
 class QuitCommand : Command			{ virtual void execute(Scene* scene);};
-//class GameStartCommand : Command { virtual void execute(Scene* scene); };
 
 
 class InputHandler

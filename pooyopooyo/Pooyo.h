@@ -1,10 +1,12 @@
 #pragma once
+#include "Texture.h"
+#include <map>
 
 enum PooyoColor
 {
 	POOYO_COLOR_RED,
-	POOYO_COLOR_GREEN,
 	POOYO_COLOR_BLUE,
+	POOYO_COLOR_GREEN,
 	POOYO_COLOR_YELLOW,
 	POOYO_COLOR_COUNT
 };
@@ -33,36 +35,35 @@ enum PooyoConnection
 class Pooyo
 {
 private:
-	//float x_actual, y_actual;
-	//float x_toBe, y_toBe;
+	static std::map<PooyoConnection, SDL_Rect> spriteClip;
+
 	int x, y;
 	float xAnim, yAnim;
 	int color;
-	bool isOnHalf = true;
+
+	Texture texture;
 
 public:
+	bool isHalfwayUp = true;
 	char connection; // bitString. Using enum PooyoConnection
 
 public:
-	Pooyo(int _x, int _y, int _color)
-		//: x_actual(_x), y_actual(_y),
-		//x_toBe(_x), y_toBe(_y),
-		:x(_x), y(_y), xAnim((float)_x), yAnim((float)_y),
-		color(_color), connection(POOYO_CONN_NO)
-	{}
+	Pooyo(int _x, int _y, int _color);
+	~Pooyo();
 
 	int getX();
 	int getY();
+	void setX(int _x);
+	void setY(int _y);
 	void setX(float _x);
 	void setY(float _y);
 	int getColor();
 	int getColor() const;
-	bool IsOnHalf();
 
 	void moveLeft();
 	void moveRight();
 	void moveUp();
 	void moveDown();
 
-	//void updateMoving(float deltaTIme);
+	void Render();
 };

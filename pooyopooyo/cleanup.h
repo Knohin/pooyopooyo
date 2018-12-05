@@ -50,4 +50,5 @@ inline void cleanup<SDL_Surface>(SDL_Surface *surf) {
 	SDL_FreeSurface(surf);
 }
 
+
 #endif

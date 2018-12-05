@@ -2,14 +2,6 @@
 #include <cmath>
 #include <queue>
 
-/* TODELETE
-const int Board::shape[4][2][2] = {
-	{ { 1,2 },{ 0,0 } },
-{ { 1,0 },{ 2,0 } },
-{ { 2,1 },{ 0,0 } },
-{ { 2,0 },{ 1,0 } },
-}; // 4가지 방향, 2x2 모양
-*/
 
 Board::Board(int _width=0, int _height=0)
 	:width(_width), height(_height)
@@ -31,13 +23,9 @@ void Board::Init()
 	for (int i = 0; i<height; ++i)
 		linkedBlock[i] = new bool[width]();
 
-	//isChecked = new bool*[height];
-	//for (int i = 0; i<height; ++i)
-	//	isChecked[i] = new bool[width]();
-
 	linkedBlockCount = 0;
 
-	moveDownInterval = 1.0f;
+	moveDownInterval = 0.5f;
 	elapsedTime = 0.0f;
 
 	totalErasedBlockCount = 0;
@@ -69,12 +57,6 @@ void Board::Release()
 			delete[] linkedBlock[i];
 		delete[] linkedBlock;
 	}
-	//if (isChecked)
-	//{
-	//	for (int i = 0; i < height; i++)
-	//		delete[] isChecked[i];
-	//	delete[] isChecked;
-	//}
 
 	delete curPooyo[0];
 	delete curPooyo[1];
@@ -94,21 +76,7 @@ void Board::Update(float deltaTime)
 		{
 			elapsedTime -= moveDownInterval;
 
-			if (IsCollideAt(curPooyo[0]->getX(), curPooyo[0]->getY() + 0.5f) ||
-				IsCollideAt(curPooyo[1]->getX(), curPooyo[1]->getY() + 0.5f))
-			{
-				// Set curPooyo on the board
-				AddPooyo(curPooyo[0]);
-				AddPooyo(curPooyo[1]);
-				curPooyo[0] = nullptr; // ??
-				curPooyo[1] = nullptr;
-				ChangeState(Stacking);
-			}
-			else
-			{
-				curPooyo[0]->moveDown();
-				curPooyo[1]->moveDown();
-			}
+			MoveDownCurPooyo();
 		}
 
 		// Check Game Over
@@ -134,7 +102,7 @@ void Board::Update(float deltaTime)
 			for (int i = pooyoToStack.size() - 1; 0 <= i; --i)
 			{
 				float movedY = pooyoToStack[i]->getY() + deltaDistance;
-				float x = pooyoToStack[i]->getX();
+				float x = (float)pooyoToStack[i]->getX();
 				if (IsCollideAt(x, movedY))
 				{
 					float _y = floorf(movedY);
@@ -159,16 +127,6 @@ void Board::Update(float deltaTime)
 		/// Check linking and change sprite
 		CheckConnection();
 
-		//// Pop 4 or above
-		//if (EraseLinkedBlocks())
-		//{
-		//	ChangeState(Stacking);
-		//}
-		//else
-		//{
-		//	ChangeState(Moving);
-		//}
-
 		// Pop 4 or above
 		if (pooyoToDelete.empty())
 		{
@@ -192,6 +150,15 @@ bool Board::IsFinished() { return isFinished; }
 void Board::SetElapsedTime(float t) { elapsedTime = t; }
 void Board::SetIsFinished(bool b) { isFinished = b; }
 
+bool Board::IsCollideAt(int x, int y)
+{
+	if (x < 0 || y < 0
+		|| width <= x || height <= y 
+		|| grid[y][x] != nullptr)
+		return true;
+	else
+		return false;
+}
 bool Board::IsCollideAt(float x, float y)
 {
 	int gridX = (int)ceilf(x);
@@ -208,18 +175,35 @@ bool Board::IsCollideAt(float x, float y)
 
 	return false;
 }
-bool Board::IsCollide(Pooyo* pooyo)
-{
-	return IsCollideAt(pooyo->getX(), pooyo->getY());
-}
-bool Board::IsCollide(Pooyo* pooyo, float x, float y)
-{
-	return IsCollideAt(pooyo->getX() + x, pooyo->getY() + y);
-}
+
 
 void Board::AddPooyo(Pooyo* newPooyo)
 {
 	grid[newPooyo->getY()][newPooyo->getX()] = newPooyo;
+}
+
+void Board::MoveDownCurPooyo()
+{
+	// 이동 후 충돌처리
+	curPooyo[0]->moveDown();
+	curPooyo[1]->moveDown();
+
+	if (IsCollideAt(curPooyo[0]->getX(), curPooyo[0]->getY()) ||
+		IsCollideAt(curPooyo[1]->getX(), curPooyo[1]->getY()))
+	{
+		curPooyo[0]->moveUp();
+		curPooyo[1]->moveUp();
+		AddPooyo(curPooyo[0]);
+		AddPooyo(curPooyo[1]);
+		curPooyo[0]->isHalfwayUp = false;
+		curPooyo[1]->isHalfwayUp = false;
+		curPooyo[0] = nullptr;
+		curPooyo[1] = nullptr;
+
+		ChangeState(Stacking);
+	}
+
+	SetElapsedTime(0.0f);
 }
 
 void Board::RotateCurPooyo()
@@ -328,56 +312,10 @@ void Board::CheckPooyoToStack()
 	}
 }
 
-/*
-bool Board::StackDownBlocks(float distanceToMove)
-{
-	bool moved = false;
-
-	for (int x = 0; x < width; x++)
-	{
-		int bottom = -1;
-
-		for (int y = height - 1; 0 < y; y--)
-		{
-			// IF there is no blank, just loop 
-			if (bottom == -1)
-			{
-				if (grid[y][x] == nullptr)
-					bottom = y;
-			}
-			// ELSE there's a blank so the blocks should be dropped
-			else
-			{
-				if (grid[y][x] != nullptr)
-				{
-					float movedY = grid[y][x]->getY() + distanceToMove;
-					if (IsCollideAt(x, movedY))
-					{
-						grid[(int)floorf(movedY)][x] = grid[y][x];
-						grid[y][x] = nullptr;
-					}
-					else
-					{
-						grid[y][x]->setY(movedY);
-						moved = true;
-					}
-				}
-			}
-		}
-	}
-
-	return moved;
-}
-*/
-
 
 bool Board::EraseLinkedBlocks()
 {
 	bool isErased = false;
-
-	//for (int y = 0; y < height; ++y)
-	//	for (int x = 0; x < width; ++x)
-	//		isChecked[y][x] = false;
 
 	for (int y = 0; y < height; ++y)
 		for (int x = 0; x < width; ++x)
@@ -417,7 +355,6 @@ bool Board::checkLinked(int x, int y, int color)
 
 	linkedBlockCount++;
 	linkedBlock[y][x] = true;
-	//isChecked[y][x] = true;
 
 	checkLinked(x + 1, y, color);
 	checkLinked(x - 1, y, color);

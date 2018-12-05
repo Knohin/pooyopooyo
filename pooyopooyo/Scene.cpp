@@ -4,8 +4,9 @@
 #include <cstdlib>
 #include <SDL_image.h>
 #include "GameManager.h"
-#include "sdl_renderer.h"
-#include "res_path.h"
+#include "Renderer.h"
+//#include "sdl_renderer.h"
+//#include "res_path.h"
 
 /////  CONST VARIABLES
 const int BOARD_UP = 16;
@@ -52,6 +53,7 @@ SceneManager& SceneManager::GetInstance()
 
 void SceneManager::ChangeScene(int sceneIndex)
 {
+#pragma warning(suppress:4018)
 	if (sceneIndex < 0 && scenes.size() <= sceneIndex)
 	{
 		std::cerr << "ChangeScene Error : out of index" << std::endl;
@@ -78,10 +80,10 @@ public:
 		pooyo = new Pooyo(0, 0, color);
 		x = _x;
 		y = _y;
-		rot = rand() % 360;
-		velX = rand() % 400 - 200;
-		velY = -(rand() % 400+ 400) ;
-		angularVel = rand() % 500 - 250;
+		rot = rand() / RAND_MAX * 360.0f;
+		velX = rand() / RAND_MAX * 400.0f - 200;
+		velY = -(rand() / RAND_MAX * 400.0f + 400) ;
+		angularVel = rand() / RAND_MAX * 500.0f - 250;
 	}
 	~PooyoParticle()
 	{
@@ -95,30 +97,21 @@ void StartMenuScene::Initialize()
 	BG_OffsetY = 0.0f;
 
 	// Load Texture
-	//renderer = GameManager::GetInstance().renderer;
-
-	background = loadTexture(getResourcePath() + "UI\\StartMenuBackground.png", renderer);
-	title = loadTexture(getResourcePath() + "UI\\StartMenuTitle.png", renderer);
-	bottomText = loadTexture(getResourcePath() + "UI\\StartMenuSpace.png", renderer);
-	pooyo[POOYO_COLOR_RED] = loadTexture(getResourcePath() + "Pooyo\\RedPooyo.png", renderer);
-	pooyo[POOYO_COLOR_GREEN] = loadTexture(getResourcePath() + "Pooyo\\GreenPooyo.png", renderer);
-	pooyo[POOYO_COLOR_BLUE] = loadTexture(getResourcePath() + "Pooyo\\BluePooyo.png", renderer);
-	pooyo[POOYO_COLOR_YELLOW] = loadTexture(getResourcePath() + "Pooyo\\YellowPooyo.png", renderer);
-
-	if (background == nullptr
-		|| title == nullptr
-		|| bottomText == nullptr
-		|| pooyo[0] == nullptr
-		|| pooyo[1] == nullptr
-		|| pooyo[2] == nullptr
-		|| pooyo[3] == nullptr)
+	if (-1 == Renderer::LoadTexture("UI\\StartMenuBackground.png", &background)
+		|| -1 == Renderer::LoadTexture("UI\\StartMenuTitle.png", &title)
+		|| -1 == Renderer::LoadTexture("UI\\StartMenuSpace.png", &bottomText) )
 	{
-		cleanup(background, title, bottomText);
-		cleanup(pooyo[0], pooyo[1], pooyo[2], pooyo[3]);
+		Renderer::CleanUp(&background, &title, &bottomText);
 		logSDLError(std::cerr, "init StartMenuScene Texture");
 		SDL_Quit();
 		exit(1);
 	}
+
+	// Init texture
+	SDL_QueryTexture(background.texture, NULL, NULL, &background.dest.w, &background.dest.h);
+	SDL_QueryTexture(title.texture, NULL, NULL, &title.dest.w, &title.dest.h);
+	SDL_QueryTexture(bottomText.texture, NULL, NULL, &bottomText.dest.w, &bottomText.dest.h);
+
 }
 
 StartMenuScene::~StartMenuScene()
@@ -129,16 +122,12 @@ void StartMenuScene::Release()
 {
 	delete inputHandler;
 	inputHandler = nullptr;
-	renderer = nullptr;
 
 	for(int i = particles.size()-1; 0<=i; --i)
 		delete particles[i];
 	particles.clear();
 
-	cleanup(background, title, bottomText);
-	cleanup(pooyo[0], pooyo[1], pooyo[2], pooyo[3]);
-	background = title = bottomText = nullptr;
-	pooyo[0] = pooyo[1] = pooyo[2] = pooyo[3] = nullptr;
+	Renderer::CleanUp(&background, &title, &bottomText);
 }
 
 void StartMenuScene::HandleInput()
@@ -190,24 +179,15 @@ void StartMenuScene::Update(float deltaTime)
 }
 void StartMenuScene::Render()
 {
-	static bool flag = true;
-	int w, h;
-	SDL_QueryTexture(background, NULL, NULL, &w, &h);
-	if (flag)
+	Renderer::RenderTexture(background);
+	Renderer::RenderTexture(title);
+	Renderer::RenderTexture(bottomText);
+
+	for (size_t i = 0; i < particles.size(); ++i)
 	{
-		std::cout << "w, h : " << w << ", " << h << std::endl;
-		flag = !flag;
-	}
-
-
-	renderTexture(background, renderer, 0, 0, w , h, BG_OffsetX, BG_OffsetY);
-	renderTexture(title, renderer, 0, 0);
-	renderTexture(bottomText, renderer, 0, 0);
-
-	//std::cout << "particles.size : " << particles.size() << std::endl;
-	for (int i = 0; i < particles.size(); ++i)
-	{
-		renderTexture(pooyo[particles[i]->pooyo->getColor()], renderer, particles[i]->x, particles[i]->y, particles[i]->rot);
+		particles[i]->pooyo->setX(particles[i]->x);
+		particles[i]->pooyo->setY(particles[i]->y);
+		particles[i]->pooyo->Render();
 	}
 }
 
@@ -238,45 +218,29 @@ void SoloGameScene::Initialize()
 	inputHandler->SetButtonQ((Command*)new QuitCommand());
 	inputHandler->SetButtonSpace((Command*)new DropDownCommand());
 
-	///////////////////////////
+
 	// Load Texture
-	//renderer = GameManager::GetInstance().renderer;
-	//std::cout << "Resource Path is >> " << getResourcePath("") << std::endl;
-
-	/*
-	background = loadTexture(getResourcePath() + "UI\\Background.bmp", renderer);
-	pooyo[POOYO_COLOR_RED] = loadTexture(getResourcePath() + "Pooyo\\RedPooyo.png", renderer);
-	pooyo[POOYO_COLOR_GREEN] = loadTexture(getResourcePath() + "Pooyo\\GreenPooyo.png", renderer);
-	pooyo[POOYO_COLOR_BLUE] = loadTexture(getResourcePath() + "Pooyo\\BluePooyo.png", renderer);
-	pooyo[POOYO_COLOR_YELLOW] = loadTexture(getResourcePath() + "Pooyo\\YellowPooyo.png", renderer);
-
-	if (background == nullptr
-		|| pooyo[0] == nullptr
-		|| pooyo[1] == nullptr
-		|| pooyo[2] == nullptr
-		|| pooyo[3] == nullptr)
+	if (-1 == Renderer::LoadTexture("UI\\tile.png", &tile)
+		|| -1 == Renderer::LoadTexture("UI\\StatusUI.png", &statusUIBackground)
+		|| -1 == Renderer::LoadTexture("Pooyo\\pooyo_sprite.png", &pooyoSprite))
 	{
-		cleanup(background, pooyo[0], pooyo[1], pooyo[2], pooyo[3]);
-		logSDLError(std::cerr, "init SoloGameScene Texture");
-		SDL_Quit();
-		exit(1);
-	}
-	*/
-
-	tile = loadTexture(getResourcePath() + "UI\\tile.png", renderer);
-	statusUIBackground = loadTexture(getResourcePath() + "UI\\StatusUI.png", renderer);
-	pooyoSprite = loadTexture(getResourcePath() + "Pooyo\\pooyo_sprite.png", renderer);
-
-	if (tile == nullptr
-		|| statusUIBackground == nullptr
-		|| pooyoSprite == nullptr)
-	{
-		cleanup(tile, statusUIBackground, pooyoSprite);
+		Renderer::CleanUp(&tile, &statusUIBackground, &pooyoSprite);
 		logSDLError(std::cerr, "init SoloGameScene Texture");
 		SDL_Quit();
 		exit(1);
 	}
 
+	tile.dest.x = 16;
+	tile.dest.y = 16;
+	tile.dest.w = 64 * BOARD_COLS;
+	tile.dest.h = 64 * BOARD_ROWS;
+
+	SDL_QueryTexture(statusUIBackground.texture, NULL, NULL, &statusUIBackground.dest.w, &statusUIBackground.dest.h);
+
+	pooyoSprite.dest.x = 16;
+	pooyoSprite.dest.y = 64+16;
+	pooyoSprite.dest.w = 512;
+	pooyoSprite.dest.h = 512;
 }
 
 SoloGameScene::~SoloGameScene()
@@ -287,12 +251,10 @@ void SoloGameScene::Release()
 {
 	delete inputHandler;
 	inputHandler = nullptr;
-	renderer = nullptr;
 
 	delete board;
 
-	cleanup(background, pooyo[0], pooyo[1], pooyo[2], pooyo[3]);
-	background = pooyo[0] = pooyo[1] = pooyo[2] = pooyo[3] = nullptr;
+	Renderer::CleanUp(&tile, &statusUIBackground, &pooyoSprite);
 }
 
 void SoloGameScene::HandleInput()
@@ -316,8 +278,9 @@ void SoloGameScene::Render()
 	const int Height = board->GetHeight();
 	const int Width = board->GetWidth();
 
-	// Draw Background (Not needed)
-	// renderTexture(background, renderer, 0, 0);
+	// Draw BoardTile
+	//Renderer::RenderTexture(tile);
+	Renderer::RenderTextureRepeat(tile, 0, 0);
 
 	// Draw pooyo which is on var board
 	int color = 0;
@@ -325,12 +288,8 @@ void SoloGameScene::Render()
 	{
 		for (int j = 0; j < Width; j++)
 		{
-			if ((*board)[i][j] == nullptr)
-				continue;
-			int color = (*board)[i][j]->getColor();
-			int x = (*board)[i][j]->getX();
-			int y = (*board)[i][j]->getY();
-			renderTexture(pooyo[color], renderer, 16 + x * 64, 16 + y * 64);
+			if ((*board)[i][j])
+				(*board)[i][j]->Render();
 		}
 	}
 
@@ -339,10 +298,7 @@ void SoloGameScene::Render()
 		iter != board->pooyoToStack.end();
 		iter++)
 	{
-		int color = (*iter)->getColor();
-		float x = (*iter)->getX();
-		float y = (*iter)->getY();
-		renderTexture(pooyo[color], renderer, 16 + x * 64, 16 + y * 64);
+		(*iter)->Render();
 	}
 
 
@@ -352,16 +308,14 @@ void SoloGameScene::Render()
 		int screenX, screenY;
 		for (int i = 0; i < 2; i++)
 		{
-			float x = board->curPooyo[i]->getX();
-			float y = board->curPooyo[i]->getY();
-			if (board->curPooyo[i]->IsOnHalf()) y -= 0.5f;
-			BoardToWindow(x, y, screenX, screenY);
-			renderTexture(pooyo[board->curPooyo[i]->getColor()], renderer, screenX, screenY);
+			board->curPooyo[i]->Render();
 		}
 	}
 
 	// Draw status UI background
-	renderTexture(background, renderer, 0, 0);
+	Renderer::RenderTexture(statusUIBackground);
+
+	//Renderer::RenderTexture(pooyoSprite);
 }
 
 

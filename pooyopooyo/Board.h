@@ -5,7 +5,6 @@
 enum eBoardState
 {
 	Moving,
-	//PrepareStacking,
 	Stacking,
 	Popping
 };
@@ -24,7 +23,6 @@ private:
 	*************************************/
 	Pooyo*** grid;
 	bool** linkedBlock;
-	//bool** isChecked;
 	int linkedBlockCount;
 
 	int direction;
@@ -59,17 +57,16 @@ public:
 	void SetElapsedTime(float t);
 	void SetIsFinished(bool);
 
+	bool IsCollideAt(int x, int y);
 	bool IsCollideAt(float x, float y);
-	bool IsCollide(Pooyo* pooyo);
-	bool IsCollide(Pooyo* pooyo, float x, float y);
 
 	void AddPooyo(Pooyo* newPooyo);
+	void MoveDownCurPooyo();
 	void RotateCurPooyo();
 	void ChangeState(eBoardState newState);
 
 private:
 	void CheckPooyoToStack();
-	//bool StackDownBlocks(float distanceToMove);
 
 	bool EraseLinkedBlocks();
 	bool checkLinked(int x, int y, int color);
